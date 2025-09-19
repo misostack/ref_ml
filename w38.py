@@ -5,12 +5,16 @@ uv add pandas
 2. Data Exploration
 """
 
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, root_mean_squared_error
 import numpy as np
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.tree import DecisionTreeRegressor
 from datetime import datetime
 import math
@@ -139,3 +143,45 @@ y_pred = dummy_rmse.predict(X_val)
 
 print("Baseline predictions:", y_pred)
 print("Baseline RMSE:", root_mean_squared_error(y_val, y_pred))
+
+
+# Bước 2: Khám phá & Chuẩn bị dữ liệu (Data Exploration + Preprocessing)
+
+# 1. Load dữ liệu
+df = pd.read_csv("./w38/melb_data.csv")
+
+# 2. Xem info
+print(df.info())
+print(df.describe())
+
+# 2. Xem info
+print(df.info())
+print(df.describe())
+
+# 3. Chọn features
+target = "Price"
+y = df[target]
+X = df.drop([target], axis=1)
+
+# 4. Chia numeric / categorical
+numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns
+categorical_cols = X.select_dtypes(include=["object"]).columns
+
+# 5. Tiền xử lý
+numeric_transformer = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="median"))
+])
+categorical_transformer = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("onehot", OneHotEncoder(handle_unknown="ignore"))
+])
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", numeric_transformer, numeric_cols),
+        ("cat", categorical_transformer, categorical_cols)
+    ]
+)
+
+print("Numeric features:", numeric_cols)
+print("Categorical features:", categorical_cols)
